@@ -5,7 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class DataLoader {
-    public static double[][] loadMatrix(String fileName, int rows, int cols) {
+    public static double[][] loadVectors(String fileName, int rows, int cols) {
         double[][] matrix = new double[rows][cols];
         try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
             String line;
@@ -24,7 +24,7 @@ public class DataLoader {
             }
 
             if (row != rows) {
-                throw new IOException("File does not contain enough rows.");
+                throw new IOException("File does not contain enough rows");
             }
 
         } catch (IOException | NumberFormatException e) {

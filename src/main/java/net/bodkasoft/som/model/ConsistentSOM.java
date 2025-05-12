@@ -11,8 +11,8 @@ public class ConsistentSOM extends SOM {
         int[] bmu = new int[2];
         double minDist = Double.MAX_VALUE;
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int x = 0; x < height; x++) {
+            for (int y = 0; y < width; y++) {
                 double dist = calculateDistance(input, weights[x][y]);
                 if (dist < minDist) {
                     minDist = dist;
@@ -29,8 +29,8 @@ public class ConsistentSOM extends SOM {
         int bmuX = bmu[0];
         int bmuY = bmu[1];
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int x = 0; x < height; x++) {
+            for (int y = 0; y < width; y++) {
                 double distToBMU = Math.pow(x - bmuX, 2) + Math.pow(y - bmuY, 2);
                 if (distToBMU <= radius * radius) {
                     double influence = Math.exp(-distToBMU / (2 * radius * radius));
