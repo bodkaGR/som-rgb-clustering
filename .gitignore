@@ -37,3 +37,7 @@ build/
 ### SOM ###
 matrix100.csv
 matrix1000.csv
+/test-rgb-60.csv
+/test-rgb-1200.csv
+/train-rgb-240.csv
+/train-rgb-4800.csv

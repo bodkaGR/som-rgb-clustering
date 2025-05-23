@@ -4,7 +4,7 @@ import java.util.*;
 
 public abstract class SOM {
     protected final int width, height, inputSize;
-    protected final double[][][] weights; // Матриця ваг з векторами RGB (X, Y, Z)
+    protected final double[][][] weights;
     protected final Random random = new Random();
 
     protected SOM(int width, int height, int inputSize) {
@@ -15,7 +15,6 @@ public abstract class SOM {
         initializeWeights();
     }
 
-    // Ініціалізація ваг випадковими значеннями (0-1)
     private void initializeWeights() {
         for (int x = 0; x < height; x++) {
             for (int y = 0; y < width; y++) {
@@ -26,7 +25,6 @@ public abstract class SOM {
         }
     }
 
-    // Обчислення відстані між двома векторами (Евклідова відстань)
     protected double calculateDistance(double[] vec1, double[] vec2) {
         double sum = 0;
         for (int i = 0; i < vec1.length; i++) {
@@ -35,38 +33,24 @@ public abstract class SOM {
         return Math.sqrt(sum);
     }
 
-    // Знаходження BMU (Best Matching Unit)
     protected abstract int[] findBMU(double[] input);
 
-    // Оновлення ваг переможця та його сусідів
     protected abstract void updateWeights(double[] input, int[] bmu, double learningRate, double radius);
 
-    public void train(double[][] data, int epochs, double initialLearningRate, double initialRadius) {
+    public void train(double[][] trainData, double[][] testData, int epochs, double initialLearningRate, double initialRadius) {
         for (int epoch = 0; epoch < epochs; epoch++) {
-            for (double[] input : data) {
+            for (double[] input : trainData) {
                 int[] bmu = findBMU(input);
                 double learningRate = initialLearningRate * Math.exp(-epoch / (double) epochs);
                 double radius = initialRadius * Math.exp(-epoch / (double) epochs);
                 updateWeights(input, bmu, learningRate, radius);
             }
-        }
-    }
 
-    public void printWeights() {
-        for (int x = 0; x < height; x++) {
-            for (int y = 0; y < width; y++) {
-                System.out.print("(");
-                for (int i = 0; i < inputSize; i++) {
-                    System.out.printf("%.2f ", weights[x][y][i]);
-                }
-                System.out.print(") ");
-            }
-            System.out.println();
-        }
-    }
+            double quantizationError = quantizationError(testData);
+            double topographicError = topographicError(testData);
 
-    public double[][][] getWeights() {
-        return weights;
+            System.out.printf("Epoch %d: QE = %.4f | TE = %.4f\n", epoch, quantizationError, topographicError);
+        }
     }
 
     public double quantizationError(double[][] data) {
@@ -77,5 +61,46 @@ public abstract class SOM {
             totalError += calculateDistance(input, weight);
         }
         return totalError / data.length;
+    }
+
+    public double topographicError(double[][] data) {
+        int errorCount = 0;
+        for (double[] input : data) {
+            int[] bmu1 = findBMU(input);
+            int[] bmu2 = findSecondBMU(input, bmu1);
+            if (!areNeighbours(bmu1, bmu2)) {
+                errorCount++;
+            }
+        }
+        return (double) errorCount / data.length;
+    }
+
+    private int[] findSecondBMU(double[] input, int[] excludeBMU) {
+        double minDist = Double.MAX_VALUE;
+        int[] secondBMU = new int[2];
+
+        for (int x = 0; x < height; x++) {
+            for (int y = 0; y < width; y++) {
+                if (x == excludeBMU[0] && y == excludeBMU[1]) continue;
+
+                double dist = calculateDistance(input, weights[x][y]);
+                if (dist < minDist) {
+                    minDist = dist;
+                    secondBMU[0] = x;
+                    secondBMU[1] = y;
+                }
+            }
+        }
+        return secondBMU;
+    }
+
+    private boolean areNeighbours(int[] bmu1, int[] bmu2) {
+        int dx = Math.abs(bmu1[0] - bmu2[0]);
+        int dy = Math.abs(bmu1[1] - bmu2[1]);
+        return dx <= 1 && dy <= 1;
+    }
+
+    public double[][][] getWeights() {
+        return weights;
     }
 }

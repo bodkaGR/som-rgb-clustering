@@ -7,9 +7,9 @@ import java.util.concurrent.RecursiveTask;
 public class ConcurrentSOM extends SOM {
     private final ForkJoinPool forkJoinPool;
 
-    public ConcurrentSOM(int width, int height, int inputSize) {
+    public ConcurrentSOM(int width, int height, int inputSize, int processorsAmount) {
         super(width, height, inputSize);
-        this.forkJoinPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+        this.forkJoinPool = new ForkJoinPool(processorsAmount);
     }
 
     private class BMUTask extends RecursiveTask<int[]> {
@@ -28,14 +28,14 @@ public class ConcurrentSOM extends SOM {
             if (end - start <= threshold) {
                 double minDist = Double.MAX_VALUE;
                 int[] best = new int[2];
-                for (int i = start; i < end; i++) {
-                    int x = i / height;
-                    int y = i % height;
-                    double dist = calculateDistance(input, weights[x][y]);
-                    if (dist < minDist) {
-                        minDist = dist;
-                        best[0] = x;
-                        best[1] = y;
+                for (int x = start; x < end; x++) {
+                    for (int y = 0; y < width; y++) {
+                        double dist = calculateDistance(input, weights[x][y]);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            best[0] = x;
+                            best[1] = y;
+                        }
                     }
                 }
                 return best;
@@ -55,7 +55,7 @@ public class ConcurrentSOM extends SOM {
 
     @Override
     protected int[] findBMU(double[] input) {
-        return forkJoinPool.invoke(new BMUTask(input, 0, width * height));
+        return forkJoinPool.invoke(new BMUTask(input, 0, height));
     }
 
     private class UpdateWeightsTask extends RecursiveAction {
@@ -79,14 +79,14 @@ public class ConcurrentSOM extends SOM {
             if (end - start <= threshold) {
                 int bmuX = bmu[0];
                 int bmuY = bmu[1];
-                for (int i = start; i < end; i++) {
-                    int x = i / height;
-                    int y = i % height;
-                    double distToBMU = Math.pow(x - bmuX, 2) + Math.pow(y - bmuY, 2);
-                    if (distToBMU <= radius * radius) {
-                        double influence = Math.exp(-distToBMU / (2 * radius * radius));
-                        for (int j = 0; j < inputSize; j++) {
-                            weights[x][y][j] += learningRate * influence * (input[j] - weights[x][y][j]);
+                for (int x = start; x < end; x++) {
+                    for (int y = 0; y < width; y++) {
+                        double distToBMU = Math.pow(x - bmuX, 2) + Math.pow(y - bmuY, 2);
+                        if (distToBMU <= radius * radius) {
+                            double influence = Math.exp(-distToBMU / (2 * radius * radius));
+                            for (int i = 0; i < inputSize; i++) {
+                                weights[x][y][i] += learningRate * influence * (input[i] - weights[x][y][i]);
+                            }
                         }
                     }
                 }
@@ -102,6 +102,6 @@ public class ConcurrentSOM extends SOM {
 
     @Override
     protected void updateWeights(double[] input, int[] bmu, double learningRate, double radius) {
-        forkJoinPool.invoke(new UpdateWeightsTask(input, bmu, learningRate, radius, 0, width * height));
+        forkJoinPool.invoke(new UpdateWeightsTask(input, bmu, learningRate, radius, 0, height));
     }
 }
