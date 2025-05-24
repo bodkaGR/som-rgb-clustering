@@ -4,8 +4,8 @@ import net.bodkasoft.som.test.SOMTester;
 
 public class Main {
     public static void main(String[] args) {
-        int width = 100;
         int height = 100;
+        int width = 100;
         int inputSize = 3;
         double learningRate = 0.01;
         int processorsAmount = 8;

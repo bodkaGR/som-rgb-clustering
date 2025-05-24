@@ -32,8 +32,8 @@ public class SOMTester {
     }
 
     public void runTests() {
-        double[][] trainData = DataLoader.loadVectors("train-rgb-4800.csv", 4800, inputSize);
-        double[][] testData = DataLoader.loadVectors("test-rgb-1200.csv", 1200, inputSize);
+        double[][] trainData = DataLoader.loadVectors("train-rgb-240.csv", 240, inputSize);
+        double[][] testData = DataLoader.loadVectors("test-rgb-60.csv", 60, inputSize);
 
         System.out.printf("<--- WarmUps %d --->\n", warmupIterations);
         warmup(trainData, testData, warmupIterations);
@@ -48,13 +48,18 @@ public class SOMTester {
         }
 
         System.out.println("\n<---- Statistic ---->");
+        System.out.println("Map size: " + height + "x" + width);
+        System.out.println("Epochs: " + epochs);
+        System.out.println("Processors: " + processorsAmount);
+        System.out.println("LearningRate: " + learningRate);
+        System.out.println();
         SOMStatistic statistics = new SOMStatistic();
         statistics.calculateStatistic(somResults);
         statistics.printStatistics();
     }
 
     private TestResult runTest(int width, int height, double[][] trainData, double[][] testData) {
-        System.out.println("<--- Consistent SOM Test --->");
+        System.out.println("<--- Consistent SOM --->");
         SOM consistentSOM = new ConsistentSOM(width, height, inputSize);
         long consistentTime = measureTraining(consistentSOM, trainData, testData);
         visualize(consistentSOM);
@@ -62,7 +67,7 @@ public class SOMTester {
         double consistentTe = consistentSOM.topographicError(testData);
         System.out.println();
 
-        System.out.println("<--- Concurrent SOM Test --->");
+        System.out.println("<--- Concurrent SOM --->");
         SOM concurrentSOM = new ConcurrentSOM(width, height, inputSize, processorsAmount);
         long concurrentTime = measureTraining(concurrentSOM, trainData, testData);
         visualize(concurrentSOM);
